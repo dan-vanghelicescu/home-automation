@@ -1,0 +1,7 @@
+a:link {color: #0000ff;}
+a:visited {color: #800080;}
+a:active {color: #ff0000;}
+
+.btn {
+  box-shadow: 1px 2px 5px #000000;
+}

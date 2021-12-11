@@ -1,0 +1,72 @@
+#!/bin/bash
+
+raspberry_ip=192.168.1.12
+file=/home/stefan/home_automation/old_ip
+ping_file=/home/stefan/home_automation/ping.txt
+
+function get_ip {
+    current_ip=$(curl -s ifconfig.me)
+
+    if [ -f "$file" ]; then
+	old_ip=$(<$file)
+    else
+	old_ip="0.0.0.0"
+    fi
+}
+
+function check_ping_result {
+    old_status="schrodinger"
+    if [ -f "$ping_file" ]; then
+	old_status=$(<$ping_file)
+    fi
+
+    current_status="dead"
+    if ping -c 5 -w 5 $raspberry_ip; then
+	current_status="alive"
+    fi
+
+    if [ "$current_status" != "$old_status" ]; then
+	echo $current_status > $ping_file
+    fi
+}
+
+function send_mail {
+    echo "subject: $subject" > msg.txt
+    echo "IP Address $current_ip" >> msg.txt
+    echo "$raspberry_ip status: $current_status" >> msg.txt
+    echo $(uptime) >> msg.txt
+    echo $(date) >> msg.txt
+    echo "$current_ip:4280" >> msg.txt
+
+    curl --ssl-reqd \
+    --url 'smtps://smtp.gmail.com:465' \
+    --user 'rubusidaeus31415@gmail.com:dani1024' \
+    --mail-rcpt	'vanghelicescu@gmail.com' \
+    --mail-rcpt 'stefan.vanghelicescu@gmail.com' \
+    --mail-rcpt 'georgeta.vanghelicescu@gmail.com' \
+    --upload-file msg.txt
+}
+
+#begin
+
+get_ip
+check_ping_result
+
+subject=""
+if [ "$current_status" != "$old_status" ]; then
+    subject="$raspberry_ip is $current_status"
+fi
+if [ "$current_ip" != "$old_ip" ]; then
+    subject="The IP has changed"
+    echo $current_ip>$file
+fi
+if [ "$current_status" != "$old_status" ] && [ "$current_ip" != "$old_ip" ]; then
+    subject="$raspberry_ip is $current_status and the IP has changed"
+fi
+if [ "$1" == "mail_zilnic" ]; then
+    subject="daily"
+fi
+
+if [ ! -z "$subject" ]; then
+   # send_mail
+fi
