@@ -3,6 +3,10 @@
 #visudo:
 www-data ALL = NOPASSWD: /usr/lib/cgi-bin/livolo, /usr/bin/python
 
+install sshpass
+change www-data shell (with chsh) to /bin/bash
+manully ssh to remote as www-data
+
 #/boot/config.txt
 dtoverlay=w1-gpio
 
